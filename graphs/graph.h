@@ -7,6 +7,7 @@
 	#include<climits>
 	#include<exception>
 	#include<list>
+	#include<queue>
 	
 	#define INFINITY 2.3e100
 	using namespace std;
@@ -180,5 +181,101 @@
 			}
 		}		
 	}
+
+	// weighted non-negetive graph:
+	void myGraph::dijkstra(const string & startName) {
+		// struct for PQ
+		struct Path {
+			vertex *dest; // w
+			double cost; // d(w)
+	
+			Path (vertex * d = NULL, double c = 0.0) : dest(d), cost(c) {}
+		
+			//comparision operators
+			bool operator> (const Path & rhs) const { return cost > rhs.cost;}
+			bool operator< (const Path & rhs) const { return cost < rhs.cost;}
+		};
+
+		//init PQ
+		priority_queue<Path, vector<Path>, greater<Path> > pq;
+		Path vrec;
+
+		// get the source vertex
+		vmap::iterator itr = vertexMap.find(startName);
+		if (itr == vertexMap.end())
+			throw GraphException("Source vertex not found");
+
+		// reset
+		clearAll();
+		
+		vertex *start = itr->second;
+		itr->second->dist = 0;
+		pq.push(Path(start, 0));
+		
+		int seenNode = 0;	
+		for(; seenNode < vertexMap.size(); seenNode++) {
+
+			//find an unvisited node
+			do {
+				if (pq.empty())
+					return;
+
+				vrec  = pq.top();
+				pq.pop();
+
+			} while (vrec.dest->scratch != 0);
+
+			// Set flag as visited
+			vertex *v = vrec.dest;
+			v->scratch = 1;
+
+			for(auto E:v->adj) {
+				
+				if (E.cost < 0)
+					throw GraphException("Negetive cost found.");
+
+				if (E.dest->dist > v->dist + E.cost) {
+					E.dest->dist = v->dist + E.cost;
+					E.dest->prev = v;
+					pq.push(Path(E.dest, E.dest->dist));
+				}
+			}
+		}
+	}
+
+void myGraph::negative(const string & startName) {
+	auto itr = vertexMap.find(startName);
+	if (itr == vertexMap.end())
+		throw GraphException("Vertex not found");
+
+	clearAll();
+	list<vertex *> q;
+
+	vertex *start = itr->second;
+	start->dist = 0;
+	start->scratch++;
+	q.push_back(start);
+
+	while(!q.empty()) {
+		vertex *v = q.front();
+		q.pop_front();
+
+		if (v->scratch++ > vertexMap.size() + 1 )
+			throw GraphException("Negetive cycle detected");
+
+		for(auto E:v->adj) {
+			vertex *w = E.dest;
+			double cvw = E.cost;	
+			if (w->dist > v->dist + cvw) {
+				w->dist = v->dist + cvw;
+				w->prev = v;
+				if (w->scratch++ % 2 == 0)
+					q.push_back(w);
+				else
+					w->scratch++;
+			}
+		}
+	}
+}
 
 #endif
