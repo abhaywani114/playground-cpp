@@ -70,6 +70,7 @@
 			void dijkstra(const string & startName);
 			void negative(const string & startName);
 			void acyclic(const string & startName);
+			vmap & getVertexList() { return vertexMap;}
 
 			void printDistanceTable() {
 				cout << endl << "printDistanceTable():" << endl ;
@@ -276,6 +277,62 @@ void myGraph::negative(const string & startName) {
 			}
 		}
 	}
+}
+
+void myGraph::acyclic(const string & startName) {
+	auto itr = vertexMap.find(startName);
+	if (itr == vertexMap.end())
+		throw GraphException("Vertex not found");
+
+	clearAll();
+	vertex * start = itr->second;
+	start->dist = 0;
+	list<vertex *> q;
+
+	// calculate in degree
+	for(itr = vertexMap.begin(); itr != vertexMap.end(); ++itr) {
+		vertex * v = itr->second;
+		for(auto i = 0; i < v->adj.size(); i++) {
+			v->adj[i].dest->scratch++;
+		}
+	}
+
+	// enqueue vertex with 0 degree	
+	for(itr = vertexMap.begin(); itr != vertexMap.end(); ++itr) {
+		vertex * v = itr->second;
+		cout << "Vertex: " << v->name  << " scratch " << v->scratch << endl;
+		if (v->scratch == 0) {
+			q.push_back(v);
+			cout << "Enqueue: " << v->name << endl;
+		}
+	}
+	cout << endl << endl;
+	// run main algorithm
+	int iteration;
+	for(iteration = 0; !q.empty(); iteration++) {
+		vertex *v = q.front(); q.pop_front();
+		for(int i = 0; i < v->adj.size(); i++) {
+			Edge e = v->adj[i];
+			vertex * w = e.dest;
+				w->scratch--;
+			if (w->scratch == 0) {
+				cout << "Enqueue: " << w->name  << " scratch " << w->scratch << endl;
+				q.push_back(w);
+			}
+
+			if (v->dist == INFINITY)
+				continue;
+
+			double cvw =  e.cost;
+			if (w->dist > v->dist + cvw) {
+				w->dist = v->dist + cvw;
+				w->prev = v;
+			}
+		}
+	}
+
+	if (iteration != vertexMap.size())
+		throw GraphException("Negetive cycle detectted");
 }
 
 #endif

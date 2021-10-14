@@ -1,9 +1,4 @@
 A B 10
 B C -20
-A C 9
 C D 30
-D A 50
-A D 10
-X Y -50
-Y Z 10
-Z X 15
+A C 10

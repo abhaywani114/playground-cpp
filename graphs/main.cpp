@@ -17,7 +17,8 @@ bool processRequest(istream & in, myGraph & g) {
 		return false;
 
 	try {
-		g.negative(startName);
+		g.acyclic(startName);
+		//g.negative(startName);
 		//g.unweighted(startName);
 		//g.dijkstra(startName);
 		g.printDistanceTable();
